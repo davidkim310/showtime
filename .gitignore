@@ -1,6 +1,7 @@
 node_modules/
-dist/
-public/
+.next/
+next-env.d.ts
 .DS_Store
 *.log
 docs/
+study-plan.md

@@ -1,5 +1,4 @@
-import request from 'supertest';
-import app from '../src/server/app';
+import { api } from './routeHandler';
 import { searchListings, getAllListings } from '../src/server/services/inventoryService';
 
 describe('searchListings()', () => {
@@ -29,23 +28,29 @@ describe('searchListings()', () => {
     });
 });
 
-describe('GET /listings/search', () => {
+// The old Express suite also asserted that /listings/search wasn't shadowed
+// by the /listings/:id route, which depended on registration order. That
+// hazard no longer exists: in the App Router the search endpoint lives at a
+// static segment (app/api/listings/search/route.ts) that resolves ahead of
+// any dynamic [id] sibling, and `next build` is what verifies the file tree
+// maps to distinct URLs — a direct handler call can't observe routing at all.
+describe('GET /api/listings/search', () => {
     test('returns every listing when q is omitted', async () => {
-        const res = await request(app).get('/listings/search');
+        const res = await api.search();
 
         expect(res.status).toBe(200);
         expect(res.body.listings).toEqual(getAllListings());
     });
 
     test('returns every listing when q is empty', async () => {
-        const res = await request(app).get('/listings/search').query({ q: '' });
+        const res = await api.search('');
 
         expect(res.status).toBe(200);
         expect(res.body.listings).toEqual(getAllListings());
     });
 
     test('filters case-insensitively by title', async () => {
-        const res = await request(app).get('/listings/search').query({ q: 'dodgers' });
+        const res = await api.search('dodgers');
 
         expect(res.status).toBe(200);
         expect(res.body.listings.length).toBeGreaterThan(0);
@@ -57,18 +62,9 @@ describe('GET /listings/search', () => {
     });
 
     test('returns an empty array when nothing matches', async () => {
-        const res = await request(app).get('/listings/search').query({ q: 'zzz-no-such-event' });
+        const res = await api.search('zzz-no-such-event');
 
         expect(res.status).toBe(200);
         expect(res.body.listings).toEqual([]);
-    });
-
-    test('is not shadowed by the /listings/:id route', async () => {
-        const res = await request(app).get('/listings/search');
-
-        // A regression here would make Express treat "search" as an :id
-        // value and 404 through the single-listing lookup instead.
-        expect(res.status).toBe(200);
-        expect(Array.isArray(res.body.listings)).toBe(true);
     });
 });

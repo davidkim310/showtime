@@ -1,17 +1,16 @@
 // Short TTL so the expiration test doesn't need to wait 10 real minutes —
-// read fresh inside the route handler (see getSessionTtlMs in app.ts), so
-// setting this before requests are made is all that's needed.
+// read fresh inside the service (see getSessionTtlMs in checkoutService.ts),
+// so setting this before requests are made is all that's needed.
 process.env.SESSION_TTL_MS = '50';
 
-import request from 'supertest';
-import app from '../src/server/app';
+import { api } from './routeHandler';
 import { setListingPrice, resetListing } from '../src/server/services/inventoryService';
 import { setNextPaymentResult, resetPaymentResult } from '../src/server/services/paymentService';
 
 const LISTING_ID = 'lakers-warriors-112-14';
 
 async function createSession(qty = 2) {
-    const res = await request(app).post('/checkout-sessions').send({ listingId: LISTING_ID, qty });
+    const res = await api.createSession({ listingId: LISTING_ID, qty });
     return res.body.session;
 }
 
@@ -20,13 +19,11 @@ afterEach(() => {
     resetPaymentResult();
 });
 
-describe('POST /checkout-sessions/:id/complete', () => {
+describe('POST /api/checkout-sessions/:id/complete', () => {
     test('happy path: completes and sets an orderId', async () => {
         const session = await createSession();
 
-        const res = await request(app)
-            .post(`/checkout-sessions/${session.id}/complete`)
-            .send({ idempotencyKey: 'key-1' });
+        const res = await api.complete(session.id, { idempotencyKey: 'key-1' });
 
         expect(res.status).toBe(200);
         expect(res.body.session.status).toBe('completed');
@@ -36,12 +33,8 @@ describe('POST /checkout-sessions/:id/complete', () => {
     test('duplicate completion is idempotent: returns the same order, not an error', async () => {
         const session = await createSession();
 
-        const first = await request(app)
-            .post(`/checkout-sessions/${session.id}/complete`)
-            .send({ idempotencyKey: 'key-1' });
-        const second = await request(app)
-            .post(`/checkout-sessions/${session.id}/complete`)
-            .send({ idempotencyKey: 'key-2' });
+        const first = await api.complete(session.id, { idempotencyKey: 'key-1' });
+        const second = await api.complete(session.id, { idempotencyKey: 'key-2' });
 
         expect(second.status).toBe(200);
         expect(second.body.session.status).toBe('completed');
@@ -51,11 +44,9 @@ describe('POST /checkout-sessions/:id/complete', () => {
     test('rejects completion while a price change is unacknowledged', async () => {
         const session = await createSession();
         setListingPrice(LISTING_ID, 999);
-        await request(app).post(`/checkout-sessions/${session.id}/resume`).send({ surface: 'web' });
+        await api.resume(session.id, { surface: 'web' });
 
-        const res = await request(app)
-            .post(`/checkout-sessions/${session.id}/complete`)
-            .send({ idempotencyKey: 'key-1' });
+        const res = await api.complete(session.id, { idempotencyKey: 'key-1' });
 
         expect(res.status).toBe(409);
         expect(res.body.code).toBe('PRICE_CHANGE_UNACKED');
@@ -63,13 +54,11 @@ describe('POST /checkout-sessions/:id/complete', () => {
 
     test('rejects completion when price changed since the last resume, even without a resume in between', async () => {
         const session = await createSession();
-        await request(app).post(`/checkout-sessions/${session.id}/resume`).send({ surface: 'web' });
+        await api.resume(session.id, { surface: 'web' });
         // Price changes on the backend, but the fan never resumes again before completing.
         setListingPrice(LISTING_ID, 999);
 
-        const res = await request(app)
-            .post(`/checkout-sessions/${session.id}/complete`)
-            .send({ idempotencyKey: 'key-1' });
+        const res = await api.complete(session.id, { idempotencyKey: 'key-1' });
 
         expect(res.status).toBe(409);
         expect(res.body.code).toBe('PRICE_CHANGE_UNACKED');
@@ -81,9 +70,7 @@ describe('POST /checkout-sessions/:id/complete', () => {
         const session = await createSession();
         await new Promise((resolve) => setTimeout(resolve, 100)); // TTL is 50ms in this file
 
-        const res = await request(app)
-            .post(`/checkout-sessions/${session.id}/complete`)
-            .send({ idempotencyKey: 'key-1' });
+        const res = await api.complete(session.id, { idempotencyKey: 'key-1' });
 
         expect(res.status).toBe(409);
         expect(res.body.code).toBe('SESSION_EXPIRED');
@@ -93,17 +80,13 @@ describe('POST /checkout-sessions/:id/complete', () => {
         const session = await createSession();
         setNextPaymentResult(false);
 
-        const failed = await request(app)
-            .post(`/checkout-sessions/${session.id}/complete`)
-            .send({ idempotencyKey: 'key-1' });
+        const failed = await api.complete(session.id, { idempotencyKey: 'key-1' });
 
         expect(failed.status).toBe(200);
         expect(failed.body.session.status).toBe('completion_failed');
 
         setNextPaymentResult(true);
-        const retried = await request(app)
-            .post(`/checkout-sessions/${session.id}/complete`)
-            .send({ idempotencyKey: 'key-2' });
+        const retried = await api.complete(session.id, { idempotencyKey: 'key-2' });
 
         expect(retried.body.session.status).toBe('completed');
         expect(retried.body.session.orderId).toBeDefined();
@@ -112,9 +95,7 @@ describe('POST /checkout-sessions/:id/complete', () => {
     test('a paymentMethodId sent on completion is recorded on the session', async () => {
         const session = await createSession();
 
-        const res = await request(app)
-            .post(`/checkout-sessions/${session.id}/complete`)
-            .send({ idempotencyKey: 'key-1', paymentMethodId: 'pm-seed-visa' });
+        const res = await api.complete(session.id, { idempotencyKey: 'key-1', paymentMethodId: 'pm-seed-visa' });
 
         expect(res.status).toBe(200);
         expect(res.body.session.status).toBe('completed');
@@ -125,8 +106,8 @@ describe('POST /checkout-sessions/:id/complete', () => {
         const session = await createSession();
 
         const [a, b] = await Promise.all([
-            request(app).post(`/checkout-sessions/${session.id}/complete`).send({ idempotencyKey: 'device-a' }),
-            request(app).post(`/checkout-sessions/${session.id}/complete`).send({ idempotencyKey: 'device-b' }),
+            api.complete(session.id, { idempotencyKey: 'device-a' }),
+            api.complete(session.id, { idempotencyKey: 'device-b' }),
         ]);
 
         const responses = [a, b];
