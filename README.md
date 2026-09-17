@@ -39,6 +39,12 @@ npm install
 npm run dev            # starts the dev server
 ```
 
+Next.js runs one dev server per project directory — it holds an OS-level
+lock on `.next/dev`, released automatically when the process exits. If
+`npm run dev` reports that another server is already running, it prints
+that server's URL and PID: use the existing one, or `kill <pid>` and start
+again. A second `npm run dev` never silently picks a different port.
+
 Then visit `http://localhost:3000` — pick a quantity, click **CONTINUE**,
 and you're on the checkout page. Click **Continue on mobile →** to open the
 same session on the simulated mobile deep-link surface.
