@@ -1,14 +1,16 @@
 // Stub payment gateway. Defaults to succeeding; setNextPaymentResult lets
 // tests (and the /debug routes) force a specific outcome deterministically —
 // mirrors inventoryService's setListingPrice/markListingSoldOut stub pattern.
-let nextResult = true;
+import { persistent } from './moduleState';
+
+const state = persistent('__showtime_payment', () => ({ nextResult: true }));
 
 export function setNextPaymentResult(succeeds: boolean): void {
-    nextResult = succeeds;
+    state.nextResult = succeeds;
 }
 
 export function resetPaymentResult(): void {
-    nextResult = true;
+    state.nextResult = true;
 }
 
 // The artificial delay isn't just flavor — an instantly-resolving stub would
@@ -17,6 +19,6 @@ export function resetPaymentResult(): void {
 // exercising the race condition it's meant to verify.
 export function attemptPayment(): Promise<boolean> {
     return new Promise((resolve) => {
-        setTimeout(() => resolve(nextResult), 30);
+        setTimeout(() => resolve(state.nextResult), 30);
     });
 }
