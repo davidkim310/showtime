@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { persistent } from './moduleState';
 
 export type CardBrand = 'visa' | 'mastercard' | 'amex' | 'discover';
 
@@ -15,25 +16,29 @@ export type PaymentMethod = {
 // app (sessions are anonymous, keyed only by session id), so "saved cards"
 // can't be scoped to a real user. Mirrors inventoryService.ts's Map-based
 // stub pattern: seeded on module load, mutated in place, resets on restart.
-const paymentMethods = new Map<string, PaymentMethod>(
-    [
-        {
-            id: 'pm-seed-visa',
-            brand: 'visa' as const,
-            last4: '4242',
-            expMonth: 8,
-            expYear: 2029,
-            cardholderName: 'Jane Doe',
-        },
-        {
-            id: 'pm-seed-mastercard',
-            brand: 'mastercard' as const,
-            last4: '8210',
-            expMonth: 3,
-            expYear: 2028,
-            cardholderName: 'Jane Doe',
-        },
-    ].map((pm) => [pm.id, pm])
+const paymentMethods = persistent(
+    '__showtime_payment_methods',
+    () =>
+        new Map<string, PaymentMethod>(
+            [
+                {
+                    id: 'pm-seed-visa',
+                    brand: 'visa' as const,
+                    last4: '4242',
+                    expMonth: 8,
+                    expYear: 2029,
+                    cardholderName: 'Jane Doe',
+                },
+                {
+                    id: 'pm-seed-mastercard',
+                    brand: 'mastercard' as const,
+                    last4: '8210',
+                    expMonth: 3,
+                    expYear: 2028,
+                    cardholderName: 'Jane Doe',
+                },
+            ].map((pm) => [pm.id, pm]),
+        ),
 );
 
 export function getSavedPaymentMethods(): PaymentMethod[] {

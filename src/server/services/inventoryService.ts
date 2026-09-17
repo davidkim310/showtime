@@ -1,3 +1,5 @@
+import { persistent } from './moduleState';
+
 export type Listing = {
     id: string;
     event: { title: string; venue: string; city: string; startsAt: string };
@@ -7,7 +9,7 @@ export type Listing = {
     availableQty: number;
 };
 
-const listings = new Map<string, Listing>([
+const listings = persistent('__showtime_listings', () => new Map<string, Listing>([
     [
         'lakers-warriors-112-14',
         {
@@ -88,7 +90,7 @@ const listings = new Map<string, Listing>([
             availableQty: 5,
         },
     ],
-]);
+]));
 
 export function getListing(listingId: string): Listing | undefined {
     return listings.get(listingId);
