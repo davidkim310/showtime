@@ -1,0 +1,197 @@
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0a0a0a;
+    color: #f5f5f5;
+  }
+  header {
+    background: #000;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-bottom: 1px solid #1f1f1f;
+  }
+  header .title { font-size: 18px; font-weight: 700; letter-spacing: 0.02em; }
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 20px 120px;
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 32px;
+  }
+  @media (max-width: 720px) {
+    main { grid-template-columns: 1fr; padding-bottom: 140px; }
+  }
+  .card {
+    background: #141414;
+    border: 1px solid #262626;
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .event-title { font-size: 24px; font-weight: 800; margin: 0 0 4px; }
+  .event-meta { color: #a3a3a3; font-size: 14px; margin: 0 0 20px; }
+  .price { font-size: 40px; font-weight: 800; margin: 4px 0; }
+  .price-old { color: #a3a3a3; text-decoration: line-through; font-size: 18px; margin-right: 8px; }
+  .badge {
+    display: inline-block;
+    background: #1f2937;
+    color: #d1d5db;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin: 2px 6px 2px 0;
+  }
+  .summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #262626; font-size: 14px; }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-total { font-size: 18px; font-weight: 800; }
+  .banner {
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+  .banner-active { background: #14201a; border-color: #1f3a2a; color: #9ee6b8; }
+  .banner-price_changed { background: #241d0d; border-color: #4a3a10; color: #f2c94c; }
+  .banner-expired { background: #260f0f; border-color: #4a1414; color: #f28b8b; }
+  .banner-completion_failed { background: #260f0f; border-color: #4a1414; color: #f28b8b; }
+  .banner-payment_pending { background: #1a1530; border-color: #322a5c; color: #b9a9f2; }
+  .banner-completed { background: #0d2418; border-color: #164a2c; color: #7ee6a8; }
+  #countdown-root { color: #a3a3a3; font-size: 14px; margin-bottom: 20px; }
+  .sticky-cta {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, rgba(10,10,10,0) 0%, #0a0a0a 40%);
+  }
+  .sticky-cta .inner { max-width: 960px; margin: 0 auto; }
+  .cta-button {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 16px;
+    border-radius: 999px;
+    border: none;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    text-decoration: none;
+    color: #06210f;
+    background: #3ddc84;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+  }
+  .cta-button:hover:not([disabled]) { background: #34c976; }
+  .cta-button:active:not([disabled]) { transform: scale(0.98); }
+  .cta-button:focus-visible {
+    outline: 2px solid #9ee6b8;
+    outline-offset: 2px;
+  }
+  .cta-button[disabled] { opacity: 0.5; cursor: not-allowed; }
+  .cta-secondary { background: #262626; color: #f5f5f5; }
+  .cta-secondary:hover:not([disabled]) { background: #333333; }
+  .cta-note { font-size: 12px; color: #a3a3a3; text-align: center; margin-top: 8px; }
+  select, .qty-control { font-size: 16px; }
+  .listing-select { background: #0a0a0a; color: #f5f5f5; border: 1px solid #333; border-radius: 8px; padding: 10px; transition: border-color 0.15s ease; }
+  .listing-select:hover, .listing-select:focus-visible { border-color: #3ddc84; }
+  .view-on-mobile:hover { color: #f5f5f5; }
+  .view-on-mobile { display: inline-block; margin-top: 16px; color: #a3a3a3; font-size: 13px; text-decoration: underline; }
+
+  /* --- Payment method form --- */
+  .form-field { display: block; margin-bottom: 16px; }
+  .form-label-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .form-label { color: #a3a3a3; font-size: 14px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-field input {
+    width: 100%;
+    box-sizing: border-box;
+    background: #0a0a0a;
+    color: #f5f5f5;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 16px;
+    transition: border-color 0.15s ease;
+  }
+  .form-field input:hover, .form-field input:focus-visible { border-color: #3ddc84; outline: none; }
+  .form-field input.input-error { border-color: #f28b8b; }
+  .error-message { display: block; margin-top: 6px; color: #f28b8b; font-size: 13px; }
+  .issuer-badge {
+    display: inline-block;
+    background: #1f2937;
+    color: #d1d5db;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    border-radius: 999px;
+  }
+
+  /* --- Mobile deep-link surface: simulated phone shell --- */
+  .phone-frame {
+    max-width: 390px;
+    margin: 40px auto 0;
+    border: 8px solid #1a1a1a;
+    border-radius: 40px;
+    background: #050505;
+    overflow: hidden;
+    min-height: 720px;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .phone-statusbar {
+    text-align: center;
+    font-size: 11px;
+    color: #737373;
+    padding: 12px 0 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .phone-content { padding: 20px 20px 110px; }
+  .status-pill {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+  }
+  .status-pill-active { background: #14201a; color: #9ee6b8; }
+  .status-pill-price_changed { background: #241d0d; color: #f2c94c; }
+  .status-pill-expired, .status-pill-completion_failed { background: #260f0f; color: #f28b8b; }
+  .status-pill-payment_pending { background: #1a1530; color: #b9a9f2; }
+  .status-pill-completed { background: #0d2418; color: #7ee6a8; }
+  .phone-cta-bar {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, rgba(5,5,5,0) 0%, #050505 40%);
+  }
+  .bottom-sheet {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    background: #141414;
+    border-top: 1px solid #262626;
+    border-radius: 20px 20px 0 0;
+    padding: 12px 20px calc(20px + env(safe-area-inset-bottom));
+    box-shadow: 0 -8px 30px rgba(0,0,0,0.4);
+  }
+  .bottom-sheet-handle {
+    width: 36px; height: 4px; border-radius: 2px; background: #333;
+    margin: 0 auto 16px;
+  }
+  .bottom-sheet-message { font-size: 14px; font-weight: 700; margin-bottom: 16px; }
+  .bottom-sheet-message.tone-warning { color: #f2c94c; }
+  .bottom-sheet-message.tone-danger { color: #f28b8b; }
+  .bottom-sheet-message.tone-info { color: #b9a9f2; }
+  .bottom-sheet-message.tone-success { color: #7ee6a8; }

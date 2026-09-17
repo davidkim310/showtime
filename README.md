@@ -25,17 +25,18 @@ methods are built; everything else in the vision below is still ahead.
 
 ## Stack (current — expect this to change)
 
-Node + TypeScript + Express, in-memory store, server-rendered HTML with
-React-hydrated interactive pieces (countdown, buttons, quantity selector,
-search, payment form), bundled with esbuild. Jest + supertest for tests.
+Next.js (App Router) + TypeScript + React, in-memory store. Pages are Server
+Components; the interactive pieces (countdown, buttons, quantity selector,
+search, payment form) are Client Components under `app/components/`. The
+JSON API lives in Route Handlers under `app/api/`, and the checkout rules
+they call live in `src/server/services/checkoutService.ts`. Jest for tests,
+which invoke the Route Handlers directly.
 
-The in-memory store and the server-rendered-HTML-plus-hydration-islands
-approach are both known-temporary — see Roadmap below.
+The in-memory store is known-temporary — see Roadmap below.
 
 ```bash
 npm install
-npm run build:client   # bundles the client-side React pieces into public/checkout.js
-npm run dev            # starts the dev server and rebuilds the client bundle on change
+npm run dev            # starts the dev server
 ```
 
 Then visit `http://localhost:3000` — pick a quantity, click **CONTINUE**,
@@ -51,21 +52,20 @@ npm test
 Production build:
 
 ```bash
-npm run build          # compiles the server
-npm run build:client   # bundles the client (minified)
+npm run build
 npm start
 ```
 
-**Manual testing helpers** (dev-only, disabled when `NODE_ENV=production`):
+**Manual testing helpers** (dev-only, return 404 when `NODE_ENV=production`):
 there's no real payment/inventory system to organically fail or change
 price, so these routes let you trigger those scenarios by hand instead of
 waiting on the real hold window:
 
 ```bash
-curl -X POST http://localhost:3000/debug/listings/lakers-warriors-112-14/price -H 'Content-Type: application/json' -d '{"price": 175}'
-curl -X POST http://localhost:3000/debug/listings/lakers-warriors-112-14/sold-out
-curl -X POST http://localhost:3000/debug/listings/lakers-warriors-112-14/reset
-curl -X POST http://localhost:3000/debug/payment/force-result -H 'Content-Type: application/json' -d '{"succeeds": false}'
+curl -X POST http://localhost:3000/api/debug/listings/lakers-warriors-112-14/price -H 'Content-Type: application/json' -d '{"price": 175}'
+curl -X POST http://localhost:3000/api/debug/listings/lakers-warriors-112-14/sold-out
+curl -X POST http://localhost:3000/api/debug/listings/lakers-warriors-112-14/reset
+curl -X POST http://localhost:3000/api/debug/payment/force-result -H 'Content-Type: application/json' -d '{"succeeds": false}'
 ```
 
 ## The Checkout Session State Model

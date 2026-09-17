@@ -1,11 +1,10 @@
-import request from 'supertest';
-import app from '../src/server/app';
+import { api } from './routeHandler';
 import { getSavedPaymentMethods, addPaymentMethod } from '../src/server/services/paymentMethodsService';
 
 const LISTING_ID = 'lakers-warriors-112-14';
 
 async function createSession() {
-    const res = await request(app).post('/checkout-sessions').send({ listingId: LISTING_ID, qty: 2 });
+    const res = await api.createSession({ listingId: LISTING_ID, qty: 2 });
     return res.body.session;
 }
 
@@ -38,11 +37,11 @@ describe('paymentMethodsService', () => {
     });
 });
 
-describe('POST /checkout-sessions/:id/payment-methods', () => {
+describe('POST /api/checkout-sessions/:id/payment-methods', () => {
     test('saves a valid card and returns it', async () => {
         const session = await createSession();
 
-        const res = await request(app).post(`/checkout-sessions/${session.id}/payment-methods`).send({
+        const res = await api.addPaymentMethod(session.id, {
             cardholderName: 'Jane Doe',
             brand: 'visa',
             last4: '9999',
@@ -56,7 +55,7 @@ describe('POST /checkout-sessions/:id/payment-methods', () => {
     });
 
     test('rejects an unknown session id', async () => {
-        const res = await request(app).post('/checkout-sessions/nonexistent/payment-methods').send({
+        const res = await api.addPaymentMethod('nonexistent', {
             cardholderName: 'Jane Doe',
             brand: 'visa',
             last4: '9999',
@@ -71,7 +70,7 @@ describe('POST /checkout-sessions/:id/payment-methods', () => {
     test('rejects a last4 that is not exactly 4 digits', async () => {
         const session = await createSession();
 
-        const res = await request(app).post(`/checkout-sessions/${session.id}/payment-methods`).send({
+        const res = await api.addPaymentMethod(session.id, {
             cardholderName: 'Jane Doe',
             brand: 'visa',
             last4: '99',
@@ -86,7 +85,7 @@ describe('POST /checkout-sessions/:id/payment-methods', () => {
     test('rejects an unsupported brand', async () => {
         const session = await createSession();
 
-        const res = await request(app).post(`/checkout-sessions/${session.id}/payment-methods`).send({
+        const res = await api.addPaymentMethod(session.id, {
             cardholderName: 'Jane Doe',
             brand: 'diners-club',
             last4: '9999',
