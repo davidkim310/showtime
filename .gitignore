@@ -5,3 +5,5 @@ next-env.d.ts
 *.log
 docs/
 study-plan.md
+AGENTS.md
+CLAUDE.md
