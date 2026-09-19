@@ -5,7 +5,8 @@ import { getSession } from '@/server/services/sessionStore';
 import { SiteHeader } from '../../../../components/SiteHeader';
 import { AddPaymentMethodForm } from '../../../../components/AddPaymentMethodForm';
 
-export const dynamic = 'force-dynamic';
+// Reads params before rendering anything, so there is no shell to stream yet: allowed to block.
+export const instant = false;
 
 export const metadata: Metadata = { title: 'Add a card — Checkout Continuity' };
 

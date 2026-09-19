@@ -1,20 +1,24 @@
+import { Suspense } from 'react';
+import { connection } from 'next/server';
 import { getAllListings } from '@/server/services/inventoryService';
 import { SiteHeader } from './components/SiteHeader';
 import { ListingSearch } from './components/ListingSearch';
 
-// Inventory is live state — prices and availability change underneath us
-// (the debug routes mutate them today, a real inventory service will later).
-// Without this the route is prerendered at build time and serves a snapshot.
-export const dynamic = 'force-dynamic';
+// Inventory is live, but the in-memory read is synchronous, so without
+// connection() Next would bake it into the build-time shell like a constant.
+async function Listings() {
+    await connection();
+    return <ListingSearch initialListings={getAllListings()} />;
+}
 
 export default function BrowsePage() {
-    const listings = getAllListings();
-
     return (
         <>
             <SiteHeader />
             <main style={{ gridTemplateColumns: '1fr', maxWidth: 960 }}>
-                <ListingSearch initialListings={listings} />
+                <Suspense fallback={<p style={{ color: '#a3a3a3', fontSize: 14 }}>Loading events…</p>}>
+                    <Listings />
+                </Suspense>
             </main>
         </>
     );

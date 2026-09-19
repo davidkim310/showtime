@@ -9,10 +9,8 @@ import { Countdown } from '../../components/Countdown';
 import { CtaButton } from '../../components/CtaButton';
 import { statusMessage } from '../../components/statusMessage';
 
-// Never cache: this page reflects live session state, and rendering it IS a
-// resume action. A cached render would silently skip that and show a stale
-// price or an expired hold as still active.
-export const dynamic = 'force-dynamic';
+// Reads params before rendering anything, so there is no shell to stream yet: allowed to block.
+export const instant = false;
 
 export const metadata: Metadata = { title: 'Checkout' };
 

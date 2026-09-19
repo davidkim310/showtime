@@ -1,4 +1,4 @@
-import { renderToStaticMarkup } from 'react-dom/server';
+import { prerenderToNodeStream } from 'react-dom/static';
 import type { ReactNode } from 'react';
 
 // Client Components call useRouter() while rendering; outside a Next runtime
@@ -7,6 +7,13 @@ import type { ReactNode } from 'react';
 jest.mock('next/navigation', () => ({
     ...jest.requireActual('next/navigation'),
     useRouter: () => ({ push: jest.fn(), replace: jest.fn(), refresh: jest.fn(), back: jest.fn(), prefetch: jest.fn() }),
+}));
+
+// connection() marks where build-time prerendering must stop, and throws when
+// there's no request in scope. Every render in this file is already per-request.
+jest.mock('next/server', () => ({
+    ...jest.requireActual('next/server'),
+    connection: jest.fn(async () => undefined),
 }));
 
 import BrowsePage from '../app/page';
@@ -22,12 +29,22 @@ import { signResumeToken } from '../src/server/resumeToken';
 const LISTING_ID = 'lakers-warriors-112-14';
 const NOT_FOUND = { digest: 'NEXT_HTTP_ERROR_FALLBACK;404' };
 
-// A page is an async function that returns an element tree. Rendering that
-// tree to static markup — no hydration, effects never run — exercises the
-// Server Component's real data access and side effects, and the Client
-// Components' initial render: exactly what a browser receives on first load.
+// A page is an async function that returns an element tree. Prerendering that
+// tree waits for every <Suspense> boundary to resolve — async children
+// included — so the result is the complete HTML a browser ends up with: the
+// Server Components' real data access and side effects, plus the Client
+// Components' initial render. Effects never run.
 async function render(page: ReactNode | Promise<ReactNode>): Promise<string> {
-    return renderToStaticMarkup(await page);
+    // An error inside a <Suspense> boundary doesn't reject the prerender —
+    // React renders the fallback and moves on — so collect and rethrow it.
+    const errors: unknown[] = [];
+    const { prelude } = await prerenderToNodeStream(await page, { onError: (error) => void errors.push(error) });
+    let html = '';
+    for await (const chunk of prelude) html += chunk;
+    if (errors.length > 0) throw errors[0];
+    // Hydration markers (<!-- --> between adjacent text nodes, <!--$--> around
+    // Suspense content) would split strings like "3 tickets left" apart.
+    return html.replace(/<!--.*?-->/g, '');
 }
 
 const params = (id: string) => Promise.resolve({ id });

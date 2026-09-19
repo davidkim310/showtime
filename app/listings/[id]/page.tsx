@@ -4,7 +4,8 @@ import { getListing } from '@/server/services/inventoryService';
 import { SiteHeader } from '../../components/SiteHeader';
 import { SelectListing } from '../../components/SelectListing';
 
-export const dynamic = 'force-dynamic';
+// Reads params before rendering anything, so there is no shell to stream yet: allowed to block.
+export const instant = false;
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     const { id } = await params;
