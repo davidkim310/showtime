@@ -15,8 +15,8 @@ export function applyResumeTransition(session: CheckoutSession, listing: Listing
     // expired, which stay correct across repeated resumes because the
     // underlying price/inventory/TTL check is re-evaluated fresh each time).
     // Without this guard, reloading the page after a failed payment would
-    // silently erase completion_failed back to active before the fan ever
-    // saw it — the fan must take an explicit retry action instead.
+    // silently erase completion_failed back to active before the buyer ever
+    // saw it — the buyer must take an explicit retry action instead.
     if (
         session.status === 'payment_pending' ||
         session.status === 'completed' ||

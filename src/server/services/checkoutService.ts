@@ -53,7 +53,7 @@ export function resumeSession(session: CheckoutSession, surface: CheckoutSurface
     // duplicating this check in both page routes — every resume in this stub
     // is immediately followed by a render, so the two are equivalent for our
     // purposes even though they wouldn't necessarily be in a real app (a
-    // background resume poll wouldn't always mean a fan is looking at a screen).
+    // background resume poll wouldn't always mean a buyer is looking at a screen).
     if (session.status === 'price_changed') {
         logEvent('price_changed_shown', { sessionId: session.id, surface });
     } else if (session.status === 'expired') {
@@ -190,7 +190,7 @@ export async function completeCheckout(
     // Rechecked directly against the live listing, symmetric with the TTL
     // recheck above — a cached 'active' status only means nothing was wrong
     // as of the last resume, not that nothing has changed since. Without
-    // this, a price change landing after a fan's last resume but before a
+    // this, a price change landing after a buyer's last resume but before a
     // completion attempt would go undetected and charge the stale price.
     const currentListing = getListing(session.listingId)!;
     session.currentPrice = currentListing.price;

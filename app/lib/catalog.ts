@@ -1,7 +1,7 @@
 import { cacheLife, cacheTag } from 'next/cache';
 import { getAllListings, getListing } from '@/server/services/inventoryService';
 
-// Display-only cached reads. Anything that decides what a fan is charged —
+// Display-only cached reads. Anything that decides what a buyer is charged —
 // session creation, completion — reads inventoryService directly, never this.
 
 export const listingTag = (id: string) => `listing:${id}`;

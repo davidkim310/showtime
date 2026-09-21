@@ -28,7 +28,7 @@ describe('full cross-surface run-through', () => {
         expect(createRes.status).toBe(201);
         const sessionId = createRes.body.session.id;
         expect(createRes.body.session.status).toBe('active');
-        // The real deep link a fan would actually be sent requires this token
+        // The real deep link a buyer would actually be sent requires this token
         // now that /mobile/checkout/:id enforces it — same as createRes would
         // have returned via resumeToken, generated directly here for clarity.
         const token = signResumeToken(sessionId);
@@ -40,7 +40,7 @@ describe('full cross-surface run-through', () => {
         expect(sessionState.lastResumedSurface).toBe('mobile');
         expect(sessionState.status).toBe('active'); // nothing wrong yet
 
-        // 3. Price changes on the backend while the fan is on the mobile page
+        // 3. Price changes on the backend while the buyer is on the mobile page
         setListingPrice(LISTING_ID, 199);
 
         // 4. Resuming again on mobile is what actually detects the change
@@ -51,12 +51,12 @@ describe('full cross-surface run-through', () => {
         expect(sessionState.currentPrice).toBe(199);
         expect(sessionState.priceAtHold).toBe(145); // unchanged until acknowledged
 
-        // Completion is blocked until the fan explicitly accepts the new price
+        // Completion is blocked until the buyer explicitly accepts the new price
         const blockedComplete = await api.complete(sessionId, { idempotencyKey: 'attempt-1' });
         expect(blockedComplete.status).toBe(409);
         expect(blockedComplete.body.code).toBe('PRICE_CHANGE_UNACKED');
 
-        // 5. Fan explicitly accepts the new price (on mobile)
+        // 5. Buyer explicitly accepts the new price (on mobile)
         const ackRes = await api.acknowledgePrice(sessionId);
         expect(ackRes.status).toBe(200);
         expect(ackRes.body.session.status).toBe('active');

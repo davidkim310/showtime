@@ -85,7 +85,7 @@ describe('applyResumeTransition', () => {
         expect(result.currentPrice).toBe(160);
     });
 
-    test('does not re-flag a price change the fan already acknowledged', () => {
+    test('does not re-flag a price change the buyer already acknowledged', () => {
         const session = makeSession({ priceAtHold: 160, priceChangeAcknowledged: true });
         const listing = makeListing({ price: 160 });
         const now = new Date('2026-07-17T00:05:00.000Z');

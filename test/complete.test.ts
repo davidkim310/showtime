@@ -55,7 +55,7 @@ describe('POST /api/checkout-sessions/:id/complete', () => {
     test('rejects completion when price changed since the last resume, even without a resume in between', async () => {
         const session = await createSession();
         await api.resume(session.id, { surface: 'web' });
-        // Price changes on the backend, but the fan never resumes again before completing.
+        // Price changes on the backend, but the buyer never resumes again before completing.
         setListingPrice(LISTING_ID, 999);
 
         const res = await api.complete(session.id, { idempotencyKey: 'key-1' });

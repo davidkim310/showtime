@@ -100,7 +100,7 @@ export function CtaButton({
                 }),
             });
             const data = await res.json();
-            // COMPLETION_IN_PROGRESS isn't really an error to show the fan —
+            // COMPLETION_IN_PROGRESS isn't really an error to show the buyer —
             // it means another device is mid-completion, so refresh to reflect
             // the real current state (payment_pending, or completed if it
             // finished by the time this lands).

@@ -11,7 +11,7 @@ methods are built; everything else in the vision below is still ahead.
 
 ## What's built so far
 
-- **Checkout continuity.** A fan creates a ticket checkout session, can
+- **Checkout continuity.** A buyer creates a ticket checkout session, can
   resume it across web and a simulated mobile deep link, and completes the
   purchase safely — the backend is the single source of truth for session
   state, price changes, expiration, and duplicate-order prevention.
@@ -99,14 +99,14 @@ stateDiagram-v2
     Active --> Expired: resume finds TTL passed or listing sold out
     Active --> PaymentPending: /complete called
 
-    PriceChanged --> Active: fan calls /acknowledge-price
+    PriceChanged --> Active: buyer calls /acknowledge-price
     PriceChanged --> Expired: resume finds TTL passed or listing sold out
 
     PaymentPending --> Completed: stub payment succeeds
     PaymentPending --> CompletionFailed: stub payment fails
     PaymentPending --> PaymentPending: a second /complete call while pending is rejected (409), lock holds
 
-    CompletionFailed --> PaymentPending: fan retries, calls /complete again
+    CompletionFailed --> PaymentPending: buyer retries, calls /complete again
     CompletionFailed --> Expired: a retry attempted after the TTL has actually passed
 
     Completed --> Completed: any further /complete call is a no-op, same order returned
@@ -140,9 +140,9 @@ nothing currently validates it (see Known Limitations).
 
 **Price changes:** `priceAtHold` freezes at session creation; `currentPrice`
 is refreshed against the stub listing on every resume. When they diverge
-and the fan hasn't acknowledged it, status becomes `price_changed` — the UI
+and the buyer hasn't acknowledged it, status becomes `price_changed` — the UI
 shows the old price struck through next to the new one, and `/complete` is
-rejected (`PRICE_CHANGE_UNACKED`) until the fan explicitly calls
+rejected (`PRICE_CHANGE_UNACKED`) until the buyer explicitly calls
 `/acknowledge-price`. The total is never silently updated.
 
 **Stale inventory / expiration:** the same resume path checks TTL and stub
@@ -195,7 +195,7 @@ regardless.
   stubs use today.
 - **Real signing/verification for `resumeToken`.**
 - **WebSocket/SSE push** instead of resume-on-reload, so a price change
-  appears without the fan needing to refresh.
+  appears without the buyer needing to refresh.
 - **No-JS `<form>` fallbacks** for the state-changing actions, not just
   page content.
 - **A real analytics pipeline** behind the instrumentation events already
