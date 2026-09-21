@@ -1,21 +1,23 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getListing } from '@/server/services/inventoryService';
+import { getAllListings } from '@/server/services/inventoryService';
+import { getCatalogListing } from '../../lib/catalog';
 import { SiteHeader } from '../../components/SiteHeader';
 import { SelectListing } from '../../components/SelectListing';
 
-// Reads params before rendering anything, so there is no shell to stream yet: allowed to block.
-export const instant = false;
+export async function generateStaticParams() {
+    return getAllListings().map((listing) => ({ id: listing.id }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     const { id } = await params;
-    const listing = getListing(id);
+    const listing = await getCatalogListing(id);
     return { title: listing ? `${listing.event.title} — Checkout Continuity` : 'Checkout Continuity' };
 }
 
 export default async function SelectListingPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const listing = getListing(id);
+    const listing = await getCatalogListing(id);
     if (!listing) notFound();
 
     return (
