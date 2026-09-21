@@ -9,11 +9,13 @@ jest.mock('next/navigation', () => ({
     useRouter: () => ({ push: jest.fn(), replace: jest.fn(), refresh: jest.fn(), back: jest.fn(), prefetch: jest.fn() }),
 }));
 
-// connection() marks where build-time prerendering must stop, and throws when
-// there's no request in scope. Every render in this file is already per-request.
-jest.mock('next/server', () => ({
-    ...jest.requireActual('next/server'),
-    connection: jest.fn(async () => undefined),
+// cacheLife()/cacheTag() throw unless Next's compiler put them inside a
+// "use cache" scope. Under Jest the directive is inert, so cached functions
+// simply run every time — the tests see the real read, uncached.
+jest.mock('next/cache', () => ({
+    ...jest.requireActual('next/cache'),
+    cacheLife: jest.fn(),
+    cacheTag: jest.fn(),
 }));
 
 import BrowsePage from '../app/page';
