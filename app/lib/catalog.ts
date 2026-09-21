@@ -1,4 +1,4 @@
-import { cacheLife, cacheTag } from 'next/cache';
+import { cacheLife, cacheTag, revalidateTag } from 'next/cache';
 import { getAllListings, getListing } from '@/server/services/inventoryService';
 
 // Display-only cached reads. Anything that decides what a buyer is charged —
@@ -21,4 +21,11 @@ export async function getCatalogListing(id: string) {
     cacheLife('hours');
     cacheTag(listingTag(id));
     return getListing(id);
+}
+
+// For callers that change inventory outside a Server Action, where updateTag
+// isn't available. expire: 0 means the next visitor waits for a fresh render
+// rather than seeing the old price once more while it refreshes.
+export function invalidateListing(id: string) {
+    revalidateTag(listingTag(id), { expire: 0 });
 }
