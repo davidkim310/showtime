@@ -16,6 +16,7 @@ import {
     detectCardIssuer,
 } from '@/client/creditCard';
 import type { CreditCardFormInput } from '@/client/creditCard';
+import { saveCard } from '../lib/actions';
 
 type FieldName = keyof CreditCardFormInput;
 
@@ -95,20 +96,19 @@ export function AddPaymentMethodForm({ sessionId }: { sessionId: string }) {
         setSaving(true);
         setSubmitError(null);
         try {
-            const res = await fetch(`/api/checkout-sessions/${sessionId}/payment-methods`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    cardholderName: result.data.cardholderName,
-                    brand: detectedIssuer.id,
-                    last4: result.data.cardNumber.slice(-4),
-                    expMonth,
-                    expYear: 2000 + expYear,
-                }),
+            // Only the summary crosses the network: the card number and CVC
+            // never leave the browser, which is why this calls the action
+            // directly instead of using <form action>, where a named field
+            // would be submitted to the server.
+            const saved = await saveCard(sessionId, {
+                cardholderName: result.data.cardholderName,
+                brand: detectedIssuer.id,
+                last4: result.data.cardNumber.slice(-4),
+                expMonth,
+                expYear: 2000 + expYear,
             });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Could not save card');
-            router.push(`/checkout/${sessionId}?paymentMethodId=${data.paymentMethod.id}`);
+            if (!saved.ok) throw new Error(saved.error);
+            router.push(`/checkout/${sessionId}?paymentMethodId=${saved.paymentMethodId}`);
         } catch (err) {
             setSubmitError(err instanceof Error ? err.message : 'Something went wrong');
             setSaving(false);

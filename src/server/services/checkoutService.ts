@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { CheckoutSession, CheckoutSurface } from '../types/checkout-session';
 import { getListing } from './inventoryService';
 import { attemptPayment } from './paymentService';
-import { addPaymentMethod } from './paymentMethodsService';
+import { addPaymentMethod, PaymentMethod } from './paymentMethodsService';
 import { getSession, saveSession } from './sessionStore';
 import {
     applyResumeTransition,
@@ -19,7 +19,7 @@ import { signResumeToken } from '../resumeToken';
 // the same decisions rather than two copies of the rules.
 export type ServiceResult<T> = { status: number; body: T };
 
-type ErrorBody = { error: string; code: string; session?: CheckoutSession };
+export type ErrorBody = { error: string; code: string; session?: CheckoutSession };
 
 const SESSION_NOT_FOUND: ServiceResult<ErrorBody> = {
     status: 404,
@@ -223,7 +223,10 @@ export async function completeCheckout(
     return { status: 200, body: { session } };
 }
 
-export function addSessionPaymentMethod(id: string, input: unknown): ServiceResult<unknown> {
+export function addSessionPaymentMethod(
+    id: string,
+    input: unknown,
+): ServiceResult<{ paymentMethod: PaymentMethod } | ErrorBody> {
     const session = getSession(id);
     if (!session) return SESSION_NOT_FOUND;
 
