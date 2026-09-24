@@ -12,3 +12,6 @@ dump.rdb
 # Playwright
 /test-results/
 /playwright-report/
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo
