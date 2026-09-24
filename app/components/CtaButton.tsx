@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { ChangeEvent } from 'react';
 import type { CheckoutSession } from '@/server/types/checkout-session';
 import type { PaymentMethod } from '@/server/services/paymentMethodsService';
+import { acknowledgePriceChange, completePurchase, type CheckoutActionResult } from '../lib/actions';
 
 const ADD_NEW_CARD = '__add_new_card__';
 
@@ -59,61 +60,34 @@ export function CtaButton({
     paidWithLabel?: string;
 }) {
     const router = useRouter();
-    // isPending covers the window where router.refresh() is re-rendering the
-    // page from the server. Unlike the full page reload this replaced, the
-    // component survives the refresh — so `busy` alone would stay stuck on
-    // and leave the button reading "Completing…" forever.
+    // The action's own refresh() is part of the transition, so isPending stays
+    // true until the re-rendered page has arrived — no separate busy flag to
+    // reset, and no window where the button is enabled but the page is stale.
     const [isPending, startTransition] = useTransition();
-    const [busy, setBusy] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
     const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState(
         () => initialPaymentMethodId ?? savedPaymentMethods[0]?.id ?? '',
     );
 
-    const disabled = busy || isPending;
+    const disabled = isPending;
 
-    async function acknowledgePrice() {
-        setBusy(true);
-        setMessage(null);
-        try {
-            const res = await fetch(`/api/checkout-sessions/${session.id}/acknowledge-price`, { method: 'POST' });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Could not accept new price');
-            startTransition(() => router.refresh());
-            setBusy(false);
-        } catch (err) {
-            setMessage(err instanceof Error ? err.message : 'Something went wrong');
-            setBusy(false);
-        }
+    function run(action: () => Promise<CheckoutActionResult>) {
+        startTransition(async () => {
+            setMessage(null);
+            const result = await action();
+            if (!result.ok) setMessage(result.error);
+        });
     }
 
-    async function completePurchase() {
-        setBusy(true);
-        setMessage(null);
-        try {
-            const res = await fetch(`/api/checkout-sessions/${session.id}/complete`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    idempotencyKey: crypto.randomUUID(),
-                    paymentMethodId: selectedPaymentMethodId,
-                }),
-            });
-            const data = await res.json();
-            // COMPLETION_IN_PROGRESS isn't really an error to show the buyer —
-            // it means another device is mid-completion, so refresh to reflect
-            // the real current state (payment_pending, or completed if it
-            // finished by the time this lands).
-            if (!res.ok && data.code !== 'COMPLETION_IN_PROGRESS') {
-                throw new Error(data.error || 'Could not complete purchase');
-            }
-            startTransition(() => router.refresh());
-            setBusy(false);
-        } catch (err) {
-            setMessage(err instanceof Error ? err.message : 'Something went wrong');
-            setBusy(false);
-        }
-    }
+    const acknowledgePrice = () => run(() => acknowledgePriceChange(session.id));
+
+    const completeThisPurchase = () =>
+        run(() =>
+            completePurchase(session.id, {
+                idempotencyKey: crypto.randomUUID(),
+                paymentMethodId: selectedPaymentMethodId,
+            }),
+        );
 
     switch (session.status) {
         case 'price_changed':
@@ -162,7 +136,7 @@ export function CtaButton({
                         selectedId={selectedPaymentMethodId}
                         onChange={setSelectedPaymentMethodId}
                     />
-                    <button className="cta-button" onClick={completePurchase} disabled={disabled}>
+                    <button className="cta-button" onClick={completeThisPurchase} disabled={disabled}>
                         {disabled ? 'Retrying…' : 'Retry Purchase'}
                     </button>
                     {message && <p className="cta-note">{message}</p>}
@@ -178,7 +152,7 @@ export function CtaButton({
                         selectedId={selectedPaymentMethodId}
                         onChange={setSelectedPaymentMethodId}
                     />
-                    <button className="cta-button" onClick={completePurchase} disabled={disabled}>
+                    <button className="cta-button" onClick={completeThisPurchase} disabled={disabled}>
                         {disabled ? 'Completing…' : 'Complete Purchase'}
                     </button>
                     {message && <p className="cta-note">{message}</p>}
