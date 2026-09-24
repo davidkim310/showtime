@@ -8,3 +8,7 @@ study-plan.md
 AGENTS.md
 CLAUDE.md
 dump.rdb
+
+# Playwright
+/test-results/
+/playwright-report/

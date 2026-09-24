@@ -52,8 +52,14 @@ same session on the simulated mobile deep-link surface.
 Run the test suite:
 
 ```bash
-npm test
+npm test          # Jest: services, Route Handlers, Server Actions, page rendering
+npm run test:e2e  # Playwright: the checkout flow in a real browser
 ```
+
+The Jest page tests render markup only, so clicking, hydration and anything
+that happens after a button press are covered by the Playwright specs in
+`e2e/`. They drive a dev server (started automatically) and use the debug
+routes to force price changes and payment failures.
 
 Production build:
 
