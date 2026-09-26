@@ -6,6 +6,7 @@ module.exports = {
     },
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
+        '\\.css$': '<rootDir>/test/cssStub.ts',
     },
     testPathIgnorePatterns: ['/node_modules/', '/.next/', '/e2e/'],
 };
