@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import AppError from '../app/error';
 import CheckoutError from '../app/checkout/[id]/error';
+import MobileCheckoutError from '../app/mobile/checkout/[id]/error';
 import GlobalError from '../app/global-error';
 
 const error = Object.assign(new Error('boom'), { digest: 'abc123' });
@@ -15,10 +16,13 @@ describe('error boundaries', () => {
         expect(markup).toContain('Reference: abc123');
     });
 
-    // This boundary can appear right after a buyer pressed Complete Purchase,
-    // so it must not invite a second payment attempt.
-    test('the checkout boundary points at reloading, not re-paying', () => {
-        const markup = renderToStaticMarkup(<CheckoutError error={error} retry={retry} />);
+    // Both can appear right after a buyer pressed Complete Purchase, so neither
+    // may invite a second payment attempt.
+    test.each([
+        { surface: 'web', Boundary: CheckoutError },
+        { surface: 'mobile', Boundary: MobileCheckoutError },
+    ])('the $surface checkout boundary points at reloading, not re-paying', ({ Boundary }) => {
+        const markup = renderToStaticMarkup(<Boundary error={error} retry={retry} />);
 
         expect(markup).toContain('We couldn’t load your checkout');
         expect(markup).toContain('Don’t enter your payment details again');
