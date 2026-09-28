@@ -18,8 +18,8 @@ jest.mock('next/cache', () => ({
     cacheTag: jest.fn(),
 }));
 
-import BrowsePage from '../app/page';
-import SelectListingPage from '../app/listings/[id]/page';
+import BrowsePage from '../app/(shop)/page';
+import SelectListingPage from '../app/(shop)/listings/[id]/page';
 import CheckoutPage from '../app/checkout/[id]/page';
 import AddPaymentMethodPage from '../app/checkout/[id]/payment-methods/new/page';
 import MobileCheckoutPage from '../app/mobile/checkout/[id]/page';

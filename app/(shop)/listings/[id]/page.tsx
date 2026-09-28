@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getAllListings } from '@/server/services/inventoryService';
-import { getCatalogListing } from '../../lib/catalog';
-import { SiteHeader } from '../../components/SiteHeader';
-import { SelectListing } from '../../components/SelectListing';
+import { getCatalogListing } from '../../../lib/catalog';
+import { SiteHeader } from '../../../components/SiteHeader';
+import { SelectListing } from '../../../components/SelectListing';
 
 export async function generateStaticParams() {
     return getAllListings().map((listing) => ({ id: listing.id }));

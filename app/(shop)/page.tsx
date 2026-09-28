@@ -1,6 +1,6 @@
-import { getCatalog } from './lib/catalog';
-import { SiteHeader } from './components/SiteHeader';
-import { ListingSearch } from './components/ListingSearch';
+import { getCatalog } from '../lib/catalog';
+import { SiteHeader } from '../components/SiteHeader';
+import { ListingSearch } from '../components/ListingSearch';
 
 export default async function BrowsePage() {
     const listings = await getCatalog();
