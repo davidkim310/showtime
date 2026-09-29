@@ -195,3 +195,27 @@
   .bottom-sheet-message.tone-danger { color: #f28b8b; }
   .bottom-sheet-message.tone-info { color: #b9a9f2; }
   .bottom-sheet-message.tone-success { color: #7ee6a8; }
+
+  /* --- Listing modal: a native <dialog> opened with showModal() --- */
+  dialog.modal {
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    width: min(560px, calc(100% - 32px));
+    max-height: calc(100% - 32px);
+    overflow: auto;
+  }
+  dialog.modal::backdrop { background: rgba(0, 0, 0, 0.7); }
+  .modal-close {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    background: none;
+    border: none;
+    color: #a3a3a3;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .modal-close:hover, .modal-close:focus-visible { color: #f5f5f5; }

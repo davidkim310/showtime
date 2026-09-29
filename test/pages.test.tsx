@@ -20,6 +20,7 @@ jest.mock('next/cache', () => ({
 
 import BrowsePage from '../app/(shop)/page';
 import SelectListingPage from '../app/(shop)/listings/[id]/page';
+import ListingModal from '../app/(shop)/@modal/(.)listings/[id]/page';
 import CheckoutPage from '../app/checkout/[id]/page';
 import AddPaymentMethodPage from '../app/checkout/[id]/payment-methods/new/page';
 import MobileCheckoutPage from '../app/mobile/checkout/[id]/page';
@@ -77,6 +78,22 @@ describe('/ (browse)', () => {
             expect(markup).toContain(listing.event.title);
             expect(markup).toContain(`href="/listings/${listing.id}"`);
         }
+    });
+});
+
+describe('/listings/[id] intercepted as a modal', () => {
+    test('an unknown listing is not found', async () => {
+        await expect(ListingModal({ params: params('no-such-listing') })).rejects.toMatchObject(NOT_FOUND);
+    });
+
+    test('renders the same listing details inside a dialog named after the event', async () => {
+        const listing = getListing(LISTING_ID)!;
+
+        const markup = await render(ListingModal({ params: params(LISTING_ID) }));
+
+        expect(markup).toMatch(new RegExp(`<dialog[^>]*aria-label="${listing.event.title}"`));
+        expect(markup).toContain(`${listing.availableQty} tickets left`);
+        expect(markup).toContain('CONTINUE');
     });
 });
 
