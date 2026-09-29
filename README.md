@@ -1,6 +1,6 @@
 # Showtime
 
-A full ticketing service application — **work in progress.**
+A full ticketing service application (NextJs) — **work in progress.**
 
 The long-term goal is a complete ticketing platform: browse and search
 events, hold and complete a purchase with real continuity across devices,
