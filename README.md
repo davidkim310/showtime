@@ -137,10 +137,13 @@ touched the session last and which one drove it to completion, so
 cross-surface handoff is something you can verify by inspecting session
 state.
 
-The mobile deep link itself is just `/mobile/checkout/:id` — no auth on it.
-`POST /checkout-sessions` also generates and returns a `resumeToken`,
-matching the shape of a real signed, short-lived deep-link token, but
-nothing currently validates it (see Known Limitations).
+The mobile deep link is `/mobile/checkout/:id?token=…`. `POST
+/checkout-sessions` returns a `resumeToken`: the session id plus an expiry,
+HMAC-signed (`src/server/resumeToken.ts`). The mobile page refuses a missing,
+forged or expired token with the same not-found response it gives for a
+session that doesn't exist, so a leaked bare session id confirms nothing.
+`proxy.ts` repeats these checks before rendering so the refusal carries a
+real 404 status; the page remains the authority.
 
 ## Handling Stale Inventory, Price Changes, and Duplicate Completion
 
@@ -175,10 +178,8 @@ regardless.
 
 - **In-memory store only.** All session/listing/payment-method state is
   lost on restart, and nothing here scales past a single process — see
-  Roadmap.
-- **`resumeToken` is generated but never validated.** It demonstrates the
-  shape of a signed deep-link token without the actual signing/
-  verification logic being enforced anywhere yet.
+  Roadmap. The proxy's pre-check reads the same store, so it relies on
+  proxy and pages sharing a process, as they do under `next start`.
 - **State-changing actions require JavaScript.** Page content (price,
   event details, current status) is server-rendered and visible without
   JS, but actions like Complete Purchase don't have a no-JS `<form>`
@@ -199,7 +200,6 @@ regardless.
   list.
 - **Real payment/inventory integration** behind the same interfaces the
   stubs use today.
-- **Real signing/verification for `resumeToken`.**
 - **WebSocket/SSE push** instead of resume-on-reload, so a price change
   appears without the buyer needing to refresh.
 - **No-JS `<form>` fallbacks** for the state-changing actions, not just
@@ -209,7 +209,3 @@ regardless.
   `completion_attempted/succeeded/failed`, `duplicate_prevented`,
   `payment_method_added`) — the event shape already exists, it just logs
   to stdout today.
-- **Automated browser tests** (e.g. Playwright) as a permanent part of the
-  suite.
-- Revisit the framework choice (e.g. Next.js) once the data layer above is
-  settled, if it's still the right call at that point.
