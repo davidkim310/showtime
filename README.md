@@ -65,8 +65,40 @@ Production build:
 
 ```bash
 npm run build
-npm start
+RESUME_TOKEN_SECRET="$(openssl rand -hex 32)" npm start
 ```
+
+### Running in production
+
+`npm start` refuses to run without `RESUME_TOKEN_SECRET`: it exits at startup
+with the reason, before serving anything. Development falls back to a fixed
+key that is committed to this public repository, so production must never use
+it — anyone could sign valid deep-link tokens with it. The build doesn't need
+the secret; only the running server does.
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `RESUME_TOKEN_SECRET` | in production | HMAC key for mobile deep-link tokens. Server-only — never prefix it with `NEXT_PUBLIC_`, which would inline it into the browser bundle. Changing it invalidates every outstanding deep link. |
+| `SESSION_TTL_MS` | no | Checkout hold length (default 10 minutes). |
+| `RESUME_TOKEN_TTL_MS` | no | Deep-link token lifetime (default 5 minutes). |
+
+**Run it as a single long-lived Node process** (`next start` on a VM or in
+one container). Not serverless, and not more than one instance, because state
+lives in that process's memory:
+
+- **A restart drops every session in progress** — buyers mid-checkout lose
+  their hold — and resets inventory and saved cards to the seed data.
+- **A second instance can't see the first one's sessions**, so a buyer whose
+  requests land on different instances would find their checkout missing.
+- **`proxy.ts` reads the same in-memory store**, which works only because it
+  shares the pages' process under `next start`.
+- **Cache invalidation is per instance**: `revalidateTag` only clears the
+  cache of the instance that received the call.
+- **Server Actions** are encrypted with a key generated per build; multiple
+  instances would need a shared `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`.
+
+Moving sessions to a shared store (Redis — see Roadmap) is what lifts the
+single-instance limit.
 
 **Manual testing helpers** (dev-only, return 404 when `NODE_ENV=production`):
 there's no real payment/inventory system to organically fail or change
